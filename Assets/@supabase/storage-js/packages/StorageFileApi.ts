@@ -1,6 +1,8 @@
 import { isStorageError, StorageError, StorageUnknownError } from '../lib/errors'
 import { Fetch, get, head, post, remove } from '../lib/fetch'
 import { recursiveToCamel, resolveFetch } from '../lib/helpers'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 import {
   FileObject,
   FileOptions,
@@ -31,11 +33,6 @@ type FileBody =
   | ArrayBuffer
   | ArrayBufferView
   | Blob
-  | Buffer
-  | File
-  | FormData
-  | NodeJS.ReadableStream
-  | ReadableStream<Uint8Array>
   | URLSearchParams
   | string
 
@@ -89,20 +86,21 @@ export default class StorageFileApi {
 
       const metadata = options.metadata
 
-      if (typeof Blob !== 'undefined' && fileBody instanceof Blob) {
-        body = new FormData()
-        body.append('cacheControl', options.cacheControl as string)
-        if (metadata) {
-          body.append('metadata', this.encodeMetadata(metadata))
-        }
-        body.append('', fileBody)
-      } else if (typeof FormData !== 'undefined' && fileBody instanceof FormData) {
-        body = fileBody
-        body.append('cacheControl', options.cacheControl as string)
-        if (metadata) {
-          body.append('metadata', this.encodeMetadata(metadata))
-        }
-      } else {
+      // if (typeof Blob !== 'undefined' && fileBody instanceof Blob) {
+      //   body = new FormData()
+      //   body.append('cacheControl', options.cacheControl as string)
+      //   if (metadata) {
+      //     body.append('metadata', this.encodeMetadata(metadata))
+      //   }
+      //   body.append('', fileBody)
+      // } else if (typeof FormData !== 'undefined' && fileBody instanceof FormData) {
+      //   body = fileBody
+      //   body.append('cacheControl', options.cacheControl as string)
+      //   if (metadata) {
+      //     body.append('metadata', this.encodeMetadata(metadata))
+      //   }
+      // } else 
+      {
         body = fileBody
         headers['cache-control'] = `max-age=${options.cacheControl}`
         headers['content-type'] = options.contentType as string
@@ -194,14 +192,15 @@ export default class StorageFileApi {
         ...{ 'x-upsert': String(options.upsert as boolean) },
       }
 
-      if (typeof Blob !== 'undefined' && fileBody instanceof Blob) {
-        body = new FormData()
-        body.append('cacheControl', options.cacheControl as string)
-        body.append('', fileBody)
-      } else if (typeof FormData !== 'undefined' && fileBody instanceof FormData) {
-        body = fileBody
-        body.append('cacheControl', options.cacheControl as string)
-      } else {
+      // if (typeof Blob !== 'undefined' && fileBody instanceof Blob) {
+      //   body = new FormData()
+      //   body.append('cacheControl', options.cacheControl as string)
+      //   body.append('', fileBody)
+      // } else if (typeof FormData !== 'undefined' && fileBody instanceof FormData) {
+      //   body = fileBody
+      //   body.append('cacheControl', options.cacheControl as string)
+      // } else 
+      {
         body = fileBody
         headers['cache-control'] = `max-age=${options.cacheControl}`
         headers['content-type'] = options.contentType as string
@@ -299,11 +298,6 @@ export default class StorageFileApi {
       | ArrayBuffer
       | ArrayBufferView
       | Blob
-      | Buffer
-      | File
-      | FormData
-      | NodeJS.ReadableStream
-      | ReadableStream<Uint8Array>
       | URLSearchParams
       | string,
     fileOptions?: FileOptions
@@ -793,9 +787,9 @@ export default class StorageFileApi {
   }
 
   toBase64(data: string) {
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(data).toString('base64')
-    }
+    // if (typeof Buffer !== 'undefined') {
+    //   return Buffer.from(data).toString('base64')
+    // }
     return btoa(data)
   }
 

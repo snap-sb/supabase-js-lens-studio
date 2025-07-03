@@ -1,3 +1,4 @@
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 import { StorageApiError, StorageUnknownError } from './errors'
 import { resolveResponse } from './helpers'
 import { FetchParameters } from './types'
