@@ -1,3 +1,4 @@
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 import { AuthClient } from '@supabase/auth-js'
 import { RealtimeClientOptions } from '@supabase/realtime-js'
 import { PostgrestError } from '@supabase/postgrest-js'

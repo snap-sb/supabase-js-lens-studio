@@ -1,5 +1,4 @@
-// @ts-ignore
-import nodeFetch, { Headers as NodeFetchHeaders } from '@supabase/node-fetch'
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 
 type Fetch = typeof fetch
 
@@ -7,8 +6,8 @@ export const resolveFetch = (customFetch?: Fetch): Fetch => {
   let _fetch: Fetch
   if (customFetch) {
     _fetch = customFetch
-  } else if (typeof fetch === 'undefined') {
-    _fetch = nodeFetch as unknown as Fetch
+  // } else if (typeof fetch === 'undefined') {
+  //   _fetch = nodeFetch as unknown as Fetch
   } else {
     _fetch = fetch
   }
@@ -16,9 +15,9 @@ export const resolveFetch = (customFetch?: Fetch): Fetch => {
 }
 
 export const resolveHeadersConstructor = () => {
-  if (typeof Headers === 'undefined') {
-    return NodeFetchHeaders
-  }
+  // if (typeof Headers === 'undefined') {
+  //   return NodeFetchHeaders
+  // }
 
   return Headers
 }
@@ -29,20 +28,20 @@ export const fetchWithAuth = (
   customFetch?: Fetch
 ): Fetch => {
   const fetch = resolveFetch(customFetch)
-  const HeadersConstructor = resolveHeadersConstructor()
+  // const HeadersConstructor = resolveHeadersConstructor()
 
   return async (input, init) => {
     const accessToken = (await getAccessToken()) ?? supabaseKey
-    let headers = new HeadersConstructor(init?.headers)
+    let headers = JSON.parse(JSON.stringify(init?.headers)) // init?.headers
+    //print(typeof(init.headers.to))
 
-    if (!headers.has('apikey')) {
-      headers.set('apikey', supabaseKey)
+    if (!headers['apikey']) {
+      headers['apikey'] = supabaseKey
     }
 
-    if (!headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${accessToken}`)
+    if (!headers['Authorization']) {
+      headers['Authorization'] =  `Bearer ${accessToken}`
     }
-
     return fetch(input, { ...init, headers })
   }
 }

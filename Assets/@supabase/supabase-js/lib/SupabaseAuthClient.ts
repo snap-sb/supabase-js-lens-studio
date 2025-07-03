@@ -1,4 +1,4 @@
-import { AuthClient } from '@supabase/auth-js'
+import { AuthClient } from '@supabase/auth-js/index'
 import { SupabaseAuthClientOptions } from './types'
 
 export class SupabaseAuthClient extends AuthClient {

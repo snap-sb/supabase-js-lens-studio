@@ -13,7 +13,7 @@ export function ensureTrailingSlash(url: string): string {
   return url.endsWith('/') ? url : url + '/'
 }
 
-export const isBrowser = () => typeof window !== 'undefined'
+export const isBrowser = () => {return false;}
 
 export function applySettingDefaults<
   Database = any,

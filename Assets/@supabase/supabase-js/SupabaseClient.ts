@@ -1,17 +1,17 @@
-import { FunctionsClient } from '@supabase/functions-js'
-import { AuthChangeEvent } from '@supabase/auth-js'
+import { FunctionsClient } from '@supabase/functions-js/index'
+import { AuthChangeEvent } from '@supabase/auth-js/index'
 import {
   PostgrestClient,
   PostgrestFilterBuilder,
   PostgrestQueryBuilder,
-} from '@supabase/postgrest-js'
+} from '@supabase/postgrest-js/index'
 import {
   RealtimeChannel,
   RealtimeChannelOptions,
   RealtimeClient,
   RealtimeClientOptions,
-} from '@supabase/realtime-js'
-import { StorageClient as SupabaseStorageClient } from '@supabase/storage-js'
+} from '@supabase/realtime-js/index'
+import { StorageClient as SupabaseStorageClient } from '@supabase/storage-js/index'
 import {
   DEFAULT_GLOBAL_OPTIONS,
   DEFAULT_DB_OPTIONS,
@@ -22,6 +22,8 @@ import { fetchWithAuth } from './lib/fetch'
 import { ensureTrailingSlash, applySettingDefaults } from './lib/helpers'
 import { SupabaseAuthClient } from './lib/SupabaseAuthClient'
 import { Fetch, GenericSchema, SupabaseClientOptions, SupabaseAuthClientOptions } from './lib/types'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index'
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 
 /**
  * Supabase Client.

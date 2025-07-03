@@ -7,10 +7,10 @@ let JS_ENV = ''
 // @ts-ignore
 if (typeof Deno !== 'undefined') {
   JS_ENV = 'deno'
-} else if (typeof document !== 'undefined') {
-  JS_ENV = 'web'
-} else if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-  JS_ENV = 'react-native'
+// } else if (typeof document !== 'undefined') {
+//   JS_ENV = 'web'
+// } else if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+//   JS_ENV = 'react-native'
 } else {
   JS_ENV = 'node'
 }
