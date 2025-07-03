@@ -1,6 +1,6 @@
 "use strict";
 const utf8Encoder = new TextEncoder();
-const utf8Decoder = new TextDecoder("utf-8", { ignoreBOM: true });
+const utf8Decoder = new TextDecoder("utf-8");
 
 function utf8Encode(string) {
   return utf8Encoder.encode(string);

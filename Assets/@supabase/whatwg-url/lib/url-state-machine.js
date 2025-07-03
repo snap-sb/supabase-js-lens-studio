@@ -1,5 +1,5 @@
 "use strict";
-const tr46 = require("tr46");
+const tr46 = require("@supabase/tr46/index.js");
 
 const infra = require("./infra");
 const { utf8DecodeWithoutBOM } = require("./encoding");

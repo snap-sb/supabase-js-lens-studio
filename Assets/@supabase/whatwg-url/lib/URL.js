@@ -1,6 +1,6 @@
 "use strict";
 
-const conversions = require("webidl-conversions");
+const conversions = require("@supabase/webidl-conversions/index.js");
 const utils = require("./utils.js");
 
 const implSymbol = utils.implSymbol;

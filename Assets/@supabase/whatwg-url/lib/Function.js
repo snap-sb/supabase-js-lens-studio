@@ -1,6 +1,6 @@
 "use strict";
 
-const conversions = require("webidl-conversions");
+const conversions = require("@supabase/webidl-conversions/index.js");
 const utils = require("./utils.js");
 
 exports.convert = (globalObject, value, { context = "The provided value" } = {}) => {
