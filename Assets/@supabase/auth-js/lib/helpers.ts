@@ -1,7 +1,10 @@
+import { console, fetchPolyFill as fetch, setTimeoutPolyFill as setTimeout } from '@supabase/global-polyfill-custom/index'
 import { API_VERSION_HEADER_NAME, BASE64URL_REGEX } from './constants'
 import { AuthInvalidJwtError } from './errors'
 import { base64UrlToUint8Array, stringFromBase64URL } from './base64url'
 import { JwtHeader, JwtPayload, SupportedStorage } from './types'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 
 export function expiresAt(expiresIn: number) {
   const timeNow = Math.round(Date.now() / 1000)
@@ -16,7 +19,7 @@ export function uuid() {
   })
 }
 
-export const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
+export const isBrowser = () => { return false; }
 
 const localStorageWriteTests = {
   tested: false,
@@ -251,7 +254,8 @@ function dec2hex(dec: number) {
 // Functions below taken from: https://stackoverflow.com/questions/63309409/creating-a-code-verifier-and-challenge-for-pkce-auth-on-spotify-api-in-reactjs
 export function generatePKCEVerifier() {
   const verifierLength = 56
-  const array = new Uint32Array(verifierLength)
+  // const array = new Uint32Array(verifierLength)
+  const array = new Uint8Array(verifierLength * 4)
   if (typeof crypto === 'undefined') {
     const charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
     const charSetLen = charSet.length
@@ -312,8 +316,9 @@ export async function getCodeChallengeAndMethod(
 const API_VERSION_REGEX = /^2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$/i
 
 export function parseResponseAPIVersion(response: Response) {
+  console.log('parseResponseAPIVersion', response)
   const apiVersion = response.headers.get(API_VERSION_HEADER_NAME)
-
+  console.log('apiVersion', apiVersion)
   if (!apiVersion) {
     return null
   }

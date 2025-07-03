@@ -1,3 +1,4 @@
+import { console, fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 import { API_VERSIONS, API_VERSION_HEADER_NAME } from './constants'
 import { expiresAt, looksLikeFetchResponse, parseResponseAPIVersion } from './helpers'
 import {
@@ -16,6 +17,9 @@ import {
   AuthUnknownError,
   AuthSessionMissingError,
 } from './errors'
+
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 
 export type Fetch = typeof fetch
 
@@ -221,7 +225,12 @@ export function _sessionResponse(data: any): AuthResponse {
 }
 
 export function _sessionResponsePassword(data: any): AuthResponsePassword {
-  const response = _sessionResponse(data) as AuthResponsePassword
+  const authResponse = _sessionResponse(data)
+  if (authResponse.error) {
+    return { data: { user: null, session: null }, error: authResponse.error }
+  }
+
+  const response = { data: { user: authResponse.data.user, session: authResponse.data.session, weak_password: null }, error: null }
 
   if (
     !response.error &&

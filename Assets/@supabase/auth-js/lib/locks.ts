@@ -1,4 +1,8 @@
 import { supportsLocalStorage } from './helpers'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+import { console, setTimeoutPolyFill as setTimeout } from '@supabase/global-polyfill-custom/index'
+
 
 /**
  * @experimental
@@ -65,7 +69,7 @@ export async function navigatorLock<R>(
     console.log('@supabase/gotrue-js: navigatorLock: acquire lock', name, acquireTimeout)
   }
 
-  const abortController = new globalThis.AbortController()
+  const abortController = new AbortController()
 
   if (acquireTimeout > 0) {
     setTimeout(() => {

@@ -53,6 +53,10 @@ import { polyfillGlobalThis } from './lib/polyfills'
 import { version } from './lib/version'
 import { LockAcquireTimeoutError, navigatorLock } from './lib/locks'
 
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+import { console, setTimeoutPolyFill as setTimeout, setIntervalPolyFill as setInterval } from '@supabase/global-polyfill-custom/index'
+
 import type {
   AuthChangeEvent,
   AuthResponse,
@@ -106,9 +110,6 @@ import type {
   JWK,
   JwtPayload,
   JwtHeader,
-  SolanaWeb3Credentials,
-  SolanaWallet,
-  Web3Credentials,
 } from './lib/types'
 import { stringToUint8Array, bytesToBase64URL } from './lib/base64url'
 
@@ -185,7 +186,7 @@ export default class GoTrueClient {
   /**
    * Used to broadcast state change events to other tabs listening.
    */
-  protected broadcastChannel: BroadcastChannel | null = null
+  // protected broadcastChannel: null = null
 
   protected logDebugMessages: boolean
   protected logger: (message: string, ...args: any[]) => void = console.log
@@ -262,24 +263,7 @@ export default class GoTrueClient {
       this.storage = memoryLocalStorageAdapter(this.memoryStorage)
     }
 
-    if (isBrowser() && globalThis.BroadcastChannel && this.persistSession && this.storageKey) {
-      try {
-        this.broadcastChannel = new globalThis.BroadcastChannel(this.storageKey)
-      } catch (e: any) {
-        console.error(
-          'Failed to create a new BroadcastChannel, multi-tab state changes will not be available',
-          e
-        )
-      }
-
-      this.broadcastChannel?.addEventListener('message', async (event) => {
-        this._debug('received broadcast notification from other tab or client', event)
-
-        await this._notifyAllSubscribers(event.data.event, event.data.session, false) // broadcast = false so we don't get an endless loop of messages
-      })
-    }
-
-    this.initialize()
+    // this.initialize() 
   }
 
   private _debug(...args: any[]): GoTrueClient {
@@ -298,19 +282,19 @@ export default class GoTrueClient {
    * This method is automatically called when instantiating the client, but should also be called
    * manually when checking for an error from an auth redirect (oauth, magiclink, password recovery, etc).
    */
-  async initialize(): Promise<InitializeResult> {
-    if (this.initializePromise) {
-      return await this.initializePromise
-    }
+  // async initialize(): Promise<InitializeResult> {
+  //   if (this.initializePromise) {
+  //     return await this.initializePromise
+  //   }
 
-    this.initializePromise = (async () => {
-      return await this._acquireLock(-1, async () => {
-        return await this._initialize()
-      })
-    })()
+  //   this.initializePromise = (async () => {
+  //     return await this._acquireLock(-1, async () => {
+  //       return await this._initialize()
+  //     })
+  //   })()
 
-    return await this.initializePromise
-  }
+  //   return await this.initializePromise
+  // }
 
   /**
    * IMPORTANT:
@@ -318,83 +302,83 @@ export default class GoTrueClient {
    * 2. Never return a session from this method as it would be cached over
    *    the whole lifetime of the client
    */
-  private async _initialize(): Promise<InitializeResult> {
-    try {
-      const params = parseParametersFromURL(window.location.href)
-      let callbackUrlType = 'none'
-      if (this._isImplicitGrantCallback(params)) {
-        callbackUrlType = 'implicit'
-      } else if (await this._isPKCECallback(params)) {
-        callbackUrlType = 'pkce'
-      }
+  // private async _initialize(): Promise<InitializeResult> {
+  //   try {
+  //     // const params = parseParametersFromURL(window.location.href)
+  //     // let callbackUrlType = 'none'
+  //     // if (this._isImplicitGrantCallback(params)) {
+  //     //   callbackUrlType = 'implicit'
+  //     // } else if (await this._isPKCECallback(params)) {
+  //     //   callbackUrlType = 'pkce'
+  //     // }
 
-      /**
-       * Attempt to get the session from the URL only if these conditions are fulfilled
-       *
-       * Note: If the URL isn't one of the callback url types (implicit or pkce),
-       * then there could be an existing session so we don't want to prematurely remove it
-       */
-      if (isBrowser() && this.detectSessionInUrl && callbackUrlType !== 'none') {
-        const { data, error } = await this._getSessionFromURL(params, callbackUrlType)
-        if (error) {
-          this._debug('#_initialize()', 'error detecting session from URL', error)
+  //     // /**
+  //     //  * Attempt to get the session from the URL only if these conditions are fulfilled
+  //     //  *
+  //     //  * Note: If the URL isn't one of the callback url types (implicit or pkce),
+  //     //  * then there could be an existing session so we don't want to prematurely remove it
+  //     //  */
+  //     // if (isBrowser() && this.detectSessionInUrl && callbackUrlType !== 'none') {
+  //     //   const { data, error } = await this._getSessionFromURL(params, callbackUrlType)
+  //     //   if (error) {
+  //     //     this._debug('#_initialize()', 'error detecting session from URL', error)
 
-          if (isAuthImplicitGrantRedirectError(error)) {
-            const errorCode = error.details?.code
-            if (
-              errorCode === 'identity_already_exists' ||
-              errorCode === 'identity_not_found' ||
-              errorCode === 'single_identity_not_deletable'
-            ) {
-              return { error }
-            }
-          }
+  //     //     if (isAuthImplicitGrantRedirectError(error)) {
+  //     //       const errorCode = error.details?.code
+  //     //       if (
+  //     //         errorCode === 'identity_already_exists' ||
+  //     //         errorCode === 'identity_not_found' ||
+  //     //         errorCode === 'single_identity_not_deletable'
+  //     //       ) {
+  //     //         return { error }
+  //     //       }
+  //     //     }
 
-          // failed login attempt via url,
-          // remove old session as in verifyOtp, signUp and signInWith*
-          await this._removeSession()
+  //     //     // failed login attempt via url,
+  //     //     // remove old session as in verifyOtp, signUp and signInWith*
+  //     //     await this._removeSession()
 
-          return { error }
-        }
+  //     //     return { error }
+  //     //   }
 
-        const { session, redirectType } = data
+  //     //   const { session, redirectType } = data
 
-        this._debug(
-          '#_initialize()',
-          'detected session in URL',
-          session,
-          'redirect type',
-          redirectType
-        )
+  //     //   this._debug(
+  //     //     '#_initialize()',
+  //     //     'detected session in URL',
+  //     //     session,
+  //     //     'redirect type',
+  //     //     redirectType
+  //     //   )
 
-        await this._saveSession(session)
+  //     //   await this._saveSession(session)
 
-        setTimeout(async () => {
-          if (redirectType === 'recovery') {
-            await this._notifyAllSubscribers('PASSWORD_RECOVERY', session)
-          } else {
-            await this._notifyAllSubscribers('SIGNED_IN', session)
-          }
-        }, 0)
+  //     //   setTimeout(async () => {
+  //     //     if (redirectType === 'recovery') {
+  //     //       await this._notifyAllSubscribers('PASSWORD_RECOVERY', session)
+  //     //     } else {
+  //     //       await this._notifyAllSubscribers('SIGNED_IN', session)
+  //     //     }
+  //     //   }, 0)
 
-        return { error: null }
-      }
-      // no login attempt via callback url try to recover session from storage
-      await this._recoverAndRefresh()
-      return { error: null }
-    } catch (error) {
-      if (isAuthError(error)) {
-        return { error }
-      }
+  //     //   return { error: null }
+  //     // }
+  //     // // no login attempt via callback url try to recover session from storage
+  //     // await this._recoverAndRefresh()
+  //     // return { error: null }
+  //   } catch (error) {
+  //     if (isAuthError(error)) {
+  //       return { error }
+  //     }
 
-      return {
-        error: new AuthUnknownError('Unexpected error during initialization', error),
-      }
-    } finally {
-      await this._handleVisibilityChange()
-      this._debug('#_initialize()', 'end')
-    }
-  }
+  //     return {
+  //       error: new AuthUnknownError('Unexpected error during initialization', error),
+  //     }
+  //   } finally {
+  //     await this._handleVisibilityChange()
+  //     this._debug('#_initialize()', 'end')
+  //   }
+  // }
 
   /**
    * Creates a new anonymous user.
@@ -553,25 +537,22 @@ export default class GoTrueClient {
           'You must provide either an email or phone number and a password'
         )
       }
-      const { data, error } = res
+      //const { data, error } = res
 
-      if (error) {
-        return { data: { user: null, session: null }, error }
-      } else if (!data || !data.session || !data.user) {
+      if (res.error) {
+        return { data: { user: null, session: null }, error: null }
+      } else if (!res.data || !res.data.session || !res.data.user) {
         return { data: { user: null, session: null }, error: new AuthInvalidTokenResponseError() }
       }
-      if (data.session) {
-        await this._saveSession(data.session)
-        await this._notifyAllSubscribers('SIGNED_IN', data.session)
+      if (res.data.session) {
+        await this._saveSession(res.data.session)
+        await this._notifyAllSubscribers('SIGNED_IN', res.data.session)
       }
-      return {
-        data: {
-          user: data.user,
-          session: data.session,
-          ...(data.weak_password ? { weakPassword: data.weak_password } : null),
-        },
-        error,
-      }
+
+      const response = {data: { user: res.data.user, session: res.data.session, weak_password: null }, error: null }
+      //if (!res.error)
+      //  response.data.weak_password = res.data.weak_password
+      return response
     } catch (error) {
       if (isAuthError(error)) {
         return { data: { user: null, session: null }, error }
@@ -602,214 +583,6 @@ export default class GoTrueClient {
     return this._acquireLock(-1, async () => {
       return this._exchangeCodeForSession(authCode)
     })
-  }
-
-  /**
-   * Signs in a user by verifying a message signed by the user's private key.
-   * Only Solana supported at this time, using the Sign in with Solana standard.
-   */
-  async signInWithWeb3(credentials: Web3Credentials): Promise<
-    | {
-        data: { session: Session; user: User }
-        error: null
-      }
-    | { data: { session: null; user: null }; error: AuthError }
-  > {
-    const { chain } = credentials
-
-    if (chain === 'solana') {
-      return await this.signInWithSolana(credentials)
-    }
-
-    throw new Error(`@supabase/auth-js: Unsupported chain "${chain}"`)
-  }
-
-  private async signInWithSolana(credentials: SolanaWeb3Credentials) {
-    let message: string
-    let signature: Uint8Array
-
-    if ('message' in credentials) {
-      message = credentials.message
-      signature = credentials.signature
-    } else {
-      const { chain, wallet, statement, options } = credentials
-
-      let resolvedWallet: SolanaWallet
-
-      if (!isBrowser()) {
-        if (typeof wallet !== 'object' || !options?.url) {
-          throw new Error(
-            '@supabase/auth-js: Both wallet and url must be specified in non-browser environments.'
-          )
-        }
-
-        resolvedWallet = wallet
-      } else if (typeof wallet === 'object') {
-        resolvedWallet = wallet
-      } else {
-        const windowAny = window as any
-
-        if (
-          'solana' in windowAny &&
-          typeof windowAny.solana === 'object' &&
-          (('signIn' in windowAny.solana && typeof windowAny.solana.signIn === 'function') ||
-            ('signMessage' in windowAny.solana &&
-              typeof windowAny.solana.signMessage === 'function'))
-        ) {
-          resolvedWallet = windowAny.solana
-        } else {
-          throw new Error(
-            `@supabase/auth-js: No compatible Solana wallet interface on the window object (window.solana) detected. Make sure the user already has a wallet installed and connected for this app. Prefer passing the wallet interface object directly to signInWithWeb3({ chain: 'solana', wallet: resolvedUserWallet }) instead.`
-          )
-        }
-      }
-
-      const url = new URL(options?.url ?? window.location.href)
-
-      if ('signIn' in resolvedWallet && resolvedWallet.signIn) {
-        const output = await resolvedWallet.signIn({
-          issuedAt: new Date().toISOString(),
-
-          ...options?.signInWithSolana,
-
-          // non-overridable properties
-          version: '1',
-          domain: url.host,
-          uri: url.href,
-
-          ...(statement ? { statement } : null),
-        })
-
-        let outputToProcess: any
-
-        if (Array.isArray(output) && output[0] && typeof output[0] === 'object') {
-          outputToProcess = output[0]
-        } else if (
-          output &&
-          typeof output === 'object' &&
-          'signedMessage' in output &&
-          'signature' in output
-        ) {
-          outputToProcess = output
-        } else {
-          throw new Error('@supabase/auth-js: Wallet method signIn() returned unrecognized value')
-        }
-
-        if (
-          'signedMessage' in outputToProcess &&
-          'signature' in outputToProcess &&
-          (typeof outputToProcess.signedMessage === 'string' ||
-            outputToProcess.signedMessage instanceof Uint8Array) &&
-          outputToProcess.signature instanceof Uint8Array
-        ) {
-          message =
-            typeof outputToProcess.signedMessage === 'string'
-              ? outputToProcess.signedMessage
-              : new TextDecoder().decode(outputToProcess.signedMessage)
-          signature = outputToProcess.signature
-        } else {
-          throw new Error(
-            '@supabase/auth-js: Wallet method signIn() API returned object without signedMessage and signature fields'
-          )
-        }
-      } else {
-        if (
-          !('signMessage' in resolvedWallet) ||
-          typeof resolvedWallet.signMessage !== 'function' ||
-          !('publicKey' in resolvedWallet) ||
-          typeof resolvedWallet !== 'object' ||
-          !resolvedWallet.publicKey ||
-          !('toBase58' in resolvedWallet.publicKey) ||
-          typeof resolvedWallet.publicKey.toBase58 !== 'function'
-        ) {
-          throw new Error(
-            '@supabase/auth-js: Wallet does not have a compatible signMessage() and publicKey.toBase58() API'
-          )
-        }
-
-        message = [
-          `${url.host} wants you to sign in with your Solana account:`,
-          resolvedWallet.publicKey.toBase58(),
-          ...(statement ? ['', statement, ''] : ['']),
-          'Version: 1',
-          `URI: ${url.href}`,
-          `Issued At: ${options?.signInWithSolana?.issuedAt ?? new Date().toISOString()}`,
-          ...(options?.signInWithSolana?.notBefore
-            ? [`Not Before: ${options.signInWithSolana.notBefore}`]
-            : []),
-          ...(options?.signInWithSolana?.expirationTime
-            ? [`Expiration Time: ${options.signInWithSolana.expirationTime}`]
-            : []),
-          ...(options?.signInWithSolana?.chainId
-            ? [`Chain ID: ${options.signInWithSolana.chainId}`]
-            : []),
-          ...(options?.signInWithSolana?.nonce ? [`Nonce: ${options.signInWithSolana.nonce}`] : []),
-          ...(options?.signInWithSolana?.requestId
-            ? [`Request ID: ${options.signInWithSolana.requestId}`]
-            : []),
-          ...(options?.signInWithSolana?.resources?.length
-            ? [
-                'Resources',
-                ...options.signInWithSolana.resources.map((resource) => `- ${resource}`),
-              ]
-            : []),
-        ].join('\n')
-
-        const maybeSignature = await resolvedWallet.signMessage(
-          new TextEncoder().encode(message),
-          'utf8'
-        )
-
-        if (!maybeSignature || !(maybeSignature instanceof Uint8Array)) {
-          throw new Error(
-            '@supabase/auth-js: Wallet signMessage() API returned an recognized value'
-          )
-        }
-
-        signature = maybeSignature
-      }
-    }
-
-    try {
-      const { data, error } = await _request(
-        this.fetch,
-        'POST',
-        `${this.url}/token?grant_type=web3`,
-        {
-          headers: this.headers,
-          body: {
-            chain: 'solana',
-            message,
-            signature: bytesToBase64URL(signature),
-
-            ...(credentials.options?.captchaToken
-              ? { gotrue_meta_security: { captcha_token: credentials.options?.captchaToken } }
-              : null),
-          },
-          xform: _sessionResponse,
-        }
-      )
-      if (error) {
-        throw error
-      }
-      if (!data || !data.session || !data.user) {
-        return {
-          data: { user: null, session: null },
-          error: new AuthInvalidTokenResponseError(),
-        }
-      }
-      if (data.session) {
-        await this._saveSession(data.session)
-        await this._notifyAllSubscribers('SIGNED_IN', data.session)
-      }
-      return { data: { ...data }, error }
-    } catch (error) {
-      if (isAuthError(error)) {
-        return { data: { user: null, session: null }, error }
-      }
-
-      throw error
-    }
   }
 
   private async _exchangeCodeForSession(authCode: string): Promise<
@@ -1682,20 +1455,20 @@ export default class GoTrueClient {
         // there's no mismatch so we continue
       }
 
-      // Since this is a redirect for PKCE, we attempt to retrieve the code from the URL for the code exchange
-      if (callbackUrlType === 'pkce') {
-        this._debug('#_initialize()', 'begin', 'is PKCE flow', true)
-        if (!params.code) throw new AuthPKCEGrantCodeExchangeError('No code detected.')
-        const { data, error } = await this._exchangeCodeForSession(params.code)
-        if (error) throw error
+      // // Since this is a redirect for PKCE, we attempt to retrieve the code from the URL for the code exchange
+      // if (callbackUrlType === 'pkce') {
+      //   this._debug('#_initialize()', 'begin', 'is PKCE flow', true)
+      //   if (!params.code) throw new AuthPKCEGrantCodeExchangeError('No code detected.')
+      //   const { data, error } = await this._exchangeCodeForSession(params.code)
+      //   if (error) throw error
 
-        const url = new URL(window.location.href)
-        url.searchParams.delete('code')
+      //   const url = new URL(window.location.href)
+      //   url.searchParams.delete('code')
 
-        window.history.replaceState(window.history.state, '', url.toString())
+      //   window.history.replaceState(window.history.state, '', url.toString())
 
-        return { data: { session: data.session, redirectType: null }, error: null }
-      }
+      //   return { data: { session: data.session, redirectType: null }, error: null }
+      // }
 
       const {
         provider_token,
@@ -1758,7 +1531,7 @@ export default class GoTrueClient {
       }
 
       // Remove tokens from URL
-      window.location.hash = ''
+      // window.location.hash = ''
       this._debug('#_getSessionFromURL()', 'clearing window.location.hash')
 
       return { data: { session, redirectType: params.type }, error: null }
@@ -1989,9 +1762,9 @@ export default class GoTrueClient {
         })
       })
       if (error) throw error
-      if (isBrowser() && !credentials.options?.skipBrowserRedirect) {
-        window.location.assign(data?.url)
-      }
+      // if (isBrowser() && !credentials.options?.skipBrowserRedirect) {
+      //   window.location.assign(data?.url)
+      // }
       return { data: { provider: credentials.provider, url: data?.url }, error: null }
     } catch (error) {
       if (isAuthError(error)) {
@@ -2111,10 +1884,10 @@ export default class GoTrueClient {
 
     this._debug('#_handleProviderSignIn()', 'provider', provider, 'options', options, 'url', url)
 
-    // try to open on the browser
-    if (isBrowser() && !options.skipBrowserRedirect) {
-      window.location.assign(url)
-    }
+    // // try to open on the browser
+    // if (isBrowser() && !options.skipBrowserRedirect) {
+    //   window.location.assign(url)
+    // }
 
     return { data: { provider, url }, error: null }
   }
@@ -2242,9 +2015,6 @@ export default class GoTrueClient {
     this._debug(debugName, 'begin', session, `broadcast = ${broadcast}`)
 
     try {
-      if (this.broadcastChannel && broadcast) {
-        this.broadcastChannel.postMessage({ event, session })
-      }
 
       const errors: any[] = []
       const promises = Array.from(this.stateChangeEmitters.values()).map(async (x) => {
@@ -2300,13 +2070,13 @@ export default class GoTrueClient {
     const callback = this.visibilityChangedCallback
     this.visibilityChangedCallback = null
 
-    try {
-      if (callback && isBrowser() && window?.removeEventListener) {
-        window.removeEventListener('visibilitychange', callback)
-      }
-    } catch (e) {
-      console.error('removing visibilitychange callback failed', e)
-    }
+    // try {
+    //   if (callback && isBrowser() && window?.removeEventListener) {
+    //     window.removeEventListener('visibilitychange', callback)
+    //   }
+    // } catch (e) {
+    //   console.error('removing visibilitychange callback failed', e)
+    // }
   }
 
   /**
@@ -2318,32 +2088,32 @@ export default class GoTrueClient {
 
     this._debug('#_startAutoRefresh()')
 
-    const ticker = setInterval(() => this._autoRefreshTokenTick(), AUTO_REFRESH_TICK_DURATION_MS)
-    this.autoRefreshTicker = ticker
+    // const ticker = setInterval(() => this._autoRefreshTokenTick(), AUTO_REFRESH_TICK_DURATION_MS)
+    // this.autoRefreshTicker = ticker
 
-    if (ticker && typeof ticker === 'object' && typeof ticker.unref === 'function') {
-      // ticker is a NodeJS Timeout object that has an `unref` method
-      // https://nodejs.org/api/timers.html#timeoutunref
-      // When auto refresh is used in NodeJS (like for testing) the
-      // `setInterval` is preventing the process from being marked as
-      // finished and tests run endlessly. This can be prevented by calling
-      // `unref()` on the returned object.
-      ticker.unref()
-      // @ts-expect-error TS has no context of Deno
-    } else if (typeof Deno !== 'undefined' && typeof Deno.unrefTimer === 'function') {
-      // similar like for NodeJS, but with the Deno API
-      // https://deno.land/api@latest?unstable&s=Deno.unrefTimer
-      // @ts-expect-error TS has no context of Deno
-      Deno.unrefTimer(ticker)
-    }
+    // if (ticker && typeof ticker === 'object' && typeof ticker.unref === 'function') {
+    //   // ticker is a NodeJS Timeout object that has an `unref` method
+    //   // https://nodejs.org/api/timers.html#timeoutunref
+    //   // When auto refresh is used in NodeJS (like for testing) the
+    //   // `setInterval` is preventing the process from being marked as
+    //   // finished and tests run endlessly. This can be prevented by calling
+    //   // `unref()` on the returned object.
+    //   ticker.unref()
+    //   // @ts-expect-error TS has no context of Deno
+    // } else if (typeof Deno !== 'undefined' && typeof Deno.unrefTimer === 'function') {
+    //   // similar like for NodeJS, but with the Deno API
+    //   // https://deno.land/api@latest?unstable&s=Deno.unrefTimer
+    //   // @ts-expect-error TS has no context of Deno
+    //   Deno.unrefTimer(ticker)
+    // }
 
-    // run the tick immediately, but in the next pass of the event loop so that
-    // #_initialize can be allowed to complete without recursively waiting on
-    // itself
-    setTimeout(async () => {
-      await this.initializePromise
-      await this._autoRefreshTokenTick()
-    }, 0)
+    // // run the tick immediately, but in the next pass of the event loop so that
+    // // #_initialize can be allowed to complete without recursively waiting on
+    // // itself
+    // setTimeout(async () => {
+    //   await this.initializePromise
+    //   await this._autoRefreshTokenTick()
+    // }, 0)
   }
 
   /**
@@ -2353,12 +2123,12 @@ export default class GoTrueClient {
   private async _stopAutoRefresh() {
     this._debug('#_stopAutoRefresh()')
 
-    const ticker = this.autoRefreshTicker
-    this.autoRefreshTicker = null
+    // const ticker = this.autoRefreshTicker
+    // this.autoRefreshTicker = null
 
-    if (ticker) {
-      clearInterval(ticker)
-    }
+    // if (ticker) {
+    //   clearInterval(ticker)
+    // }
   }
 
   /**
@@ -2461,73 +2231,73 @@ export default class GoTrueClient {
    * algorithms when the browser window/tab are in foreground. On non-browser
    * platforms it assumes always foreground.
    */
-  private async _handleVisibilityChange() {
-    this._debug('#_handleVisibilityChange()')
+  // private async _handleVisibilityChange() {
+  //   this._debug('#_handleVisibilityChange()')
 
-    if (!isBrowser() || !window?.addEventListener) {
-      if (this.autoRefreshToken) {
-        // in non-browser environments the refresh token ticker runs always
-        this.startAutoRefresh()
-      }
+  //   // if (!isBrowser() || !window?.addEventListener) {
+  //   //   if (this.autoRefreshToken) {
+  //   //     // in non-browser environments the refresh token ticker runs always
+  //   //     this.startAutoRefresh()
+  //   //   }
 
-      return false
-    }
+  //   //   return false
+  //   // }
 
-    try {
-      this.visibilityChangedCallback = async () => await this._onVisibilityChanged(false)
+  //   try {
+  //     this.visibilityChangedCallback = async () => await this._onVisibilityChanged(false)
 
-      window?.addEventListener('visibilitychange', this.visibilityChangedCallback)
+  //     //window?.addEventListener('visibilitychange', this.visibilityChangedCallback)
 
-      // now immediately call the visbility changed callback to setup with the
-      // current visbility state
-      await this._onVisibilityChanged(true) // initial call
-    } catch (error) {
-      console.error('_handleVisibilityChange', error)
-    }
-  }
+  //     // now immediately call the visbility changed callback to setup with the
+  //     // current visbility state
+  //     // await this._onVisibilityChanged(true) // initial call
+  //   } catch (error) {
+  //     console.error('_handleVisibilityChange', error)
+  //   }
+  // }
 
   /**
    * Callback registered with `window.addEventListener('visibilitychange')`.
    */
-  private async _onVisibilityChanged(calledFromInitialize: boolean) {
-    const methodName = `#_onVisibilityChanged(${calledFromInitialize})`
-    this._debug(methodName, 'visibilityState', document.visibilityState)
+  // private async _onVisibilityChanged(calledFromInitialize: boolean) {
+  //   const methodName = `#_onVisibilityChanged(${calledFromInitialize})`
+  //   this._debug(methodName, 'visibilityState', document.visibilityState)
 
-    if (document.visibilityState === 'visible') {
-      if (this.autoRefreshToken) {
-        // in browser environments the refresh token ticker runs only on focused tabs
-        // which prevents race conditions
-        this._startAutoRefresh()
-      }
+  //   if (document.visibilityState === 'visible') {
+  //     if (this.autoRefreshToken) {
+  //       // in browser environments the refresh token ticker runs only on focused tabs
+  //       // which prevents race conditions
+  //       this._startAutoRefresh()
+  //     }
 
-      if (!calledFromInitialize) {
-        // called when the visibility has changed, i.e. the browser
-        // transitioned from hidden -> visible so we need to see if the session
-        // should be recovered immediately... but to do that we need to acquire
-        // the lock first asynchronously
-        await this.initializePromise
+  //     if (!calledFromInitialize) {
+  //       // called when the visibility has changed, i.e. the browser
+  //       // transitioned from hidden -> visible so we need to see if the session
+  //       // should be recovered immediately... but to do that we need to acquire
+  //       // the lock first asynchronously
+  //       await this.initializePromise
 
-        await this._acquireLock(-1, async () => {
-          if (document.visibilityState !== 'visible') {
-            this._debug(
-              methodName,
-              'acquired the lock to recover the session, but the browser visibilityState is no longer visible, aborting'
-            )
+  //       await this._acquireLock(-1, async () => {
+  //         if (document.visibilityState !== 'visible') {
+  //           this._debug(
+  //             methodName,
+  //             'acquired the lock to recover the session, but the browser visibilityState is no longer visible, aborting'
+  //           )
 
-            // visibility has changed while waiting for the lock, abort
-            return
-          }
+  //           // visibility has changed while waiting for the lock, abort
+  //           return
+  //         }
 
-          // recover the session
-          await this._recoverAndRefresh()
-        })
-      }
-    } else if (document.visibilityState === 'hidden') {
-      if (this.autoRefreshToken) {
-        this._stopAutoRefresh()
-      }
-    }
-  }
+  //         // recover the session
+  //         await this._recoverAndRefresh()
+  //       })
+  //     }
+  //   } else if (document.visibilityState === 'hidden') {
+  //     if (this.autoRefreshToken) {
+  //       this._stopAutoRefresh()
+  //     }
+  //   }
+  // }
 
   /**
    * Generates the relevant login URL for a third-party provider.
@@ -2846,96 +2616,96 @@ export default class GoTrueClient {
     return jwk
   }
 
-  /**
-   * @experimental This method may change in future versions.
-   * @description Gets the claims from a JWT. If the JWT is symmetric JWTs, it will call getUser() to verify against the server. If the JWT is asymmetric, it will be verified against the JWKS using the WebCrypto API.
-   */
-  async getClaims(
-    jwt?: string,
-    jwks: { keys: JWK[] } = { keys: [] }
-  ): Promise<
-    | {
-        data: { claims: JwtPayload; header: JwtHeader; signature: Uint8Array }
-        error: null
-      }
-    | { data: null; error: AuthError }
-    | { data: null; error: null }
-  > {
-    try {
-      let token = jwt
-      if (!token) {
-        const { data, error } = await this.getSession()
-        if (error || !data.session) {
-          return { data: null, error }
-        }
-        token = data.session.access_token
-      }
+  // /**
+  //  * @experimental This method may change in future versions.
+  //  * @description Gets the claims from a JWT. If the JWT is symmetric JWTs, it will call getUser() to verify against the server. If the JWT is asymmetric, it will be verified against the JWKS using the WebCrypto API.
+  //  */
+  // async getClaims(
+  //   jwt?: string,
+  //   jwks: { keys: JWK[] } = { keys: [] }
+  // ): Promise<
+  //   | {
+  //       data: { claims: JwtPayload; header: JwtHeader; signature: Uint8Array }
+  //       error: null
+  //     }
+  //   | { data: null; error: AuthError }
+  //   | { data: null; error: null }
+  // > {
+  //   try {
+  //     let token = jwt
+  //     if (!token) {
+  //       const { data, error } = await this.getSession()
+  //       if (error || !data.session) {
+  //         return { data: null, error }
+  //       }
+  //       token = data.session.access_token
+  //     }
 
-      const {
-        header,
-        payload,
-        signature,
-        raw: { header: rawHeader, payload: rawPayload },
-      } = decodeJWT(token)
+  //     const {
+  //       header,
+  //       payload,
+  //       signature,
+  //       raw: { header: rawHeader, payload: rawPayload },
+  //     } = decodeJWT(token)
 
-      // Reject expired JWTs
-      validateExp(payload.exp)
+  //     // Reject expired JWTs
+  //     validateExp(payload.exp)
 
-      // If symmetric algorithm or WebCrypto API is unavailable, fallback to getUser()
-      if (
-        !header.kid ||
-        header.alg === 'HS256' ||
-        !('crypto' in globalThis && 'subtle' in globalThis.crypto)
-      ) {
-        const { error } = await this.getUser(token)
-        if (error) {
-          throw error
-        }
-        // getUser succeeds so the claims in the JWT can be trusted
-        return {
-          data: {
-            claims: payload,
-            header,
-            signature,
-          },
-          error: null,
-        }
-      }
+  //     // If symmetric algorithm or WebCrypto API is unavailable, fallback to getUser()
+  //     if (
+  //       !header.kid ||
+  //       header.alg === 'HS256' ||
+  //       !('crypto' in globalThis)
+  //     ) {
+  //       const { error } = await this.getUser(token)
+  //       if (error) {
+  //         throw error
+  //       }
+  //       // getUser succeeds so the claims in the JWT can be trusted
+  //       return {
+  //         data: {
+  //           claims: payload,
+  //           header,
+  //           signature,
+  //         },
+  //         error: null,
+  //       }
+  //     }
 
-      const algorithm = getAlgorithm(header.alg)
-      const signingKey = await this.fetchJwk(header.kid, jwks)
+  //     const algorithm = getAlgorithm(header.alg)
+  //     const signingKey = await this.fetchJwk(header.kid, jwks)
 
-      // Convert JWK to CryptoKey
-      const publicKey = await crypto.subtle.importKey('jwk', signingKey, algorithm, true, [
-        'verify',
-      ])
+  //     // Convert JWK to CryptoKey
+  //     const publicKey = await crypto.subtle.importKey('jwk', signingKey, algorithm, true, [
+  //       'verify',
+  //     ])
 
-      // Verify the signature
-      const isValid = await crypto.subtle.verify(
-        algorithm,
-        publicKey,
-        signature,
-        stringToUint8Array(`${rawHeader}.${rawPayload}`)
-      )
+  //     // Verify the signature
+  //     const isValid = await crypto.subtle.verify(
+  //       algorithm,
+  //       publicKey,
+  //       signature,
+  //       stringToUint8Array(`${rawHeader}.${rawPayload}`)
+  //     )
 
-      if (!isValid) {
-        throw new AuthInvalidJwtError('Invalid JWT signature')
-      }
+  //     if (!isValid) {
+  //       throw new AuthInvalidJwtError('Invalid JWT signature')
+  //     }
 
-      // If verification succeeds, decode and return claims
-      return {
-        data: {
-          claims: payload,
-          header,
-          signature,
-        },
-        error: null,
-      }
-    } catch (error) {
-      if (isAuthError(error)) {
-        return { data: null, error }
-      }
-      throw error
-    }
-  }
+  //     // If verification succeeds, decode and return claims
+  //     return {
+  //       data: {
+  //         claims: payload,
+  //         header,
+  //         signature,
+  //       },
+  //       error: null,
+  //     }
+  //   } catch (error) {
+  //     if (isAuthError(error)) {
+  //       return { data: null, error }
+  //     }
+  //     throw error
+  //   }
+  // }
 }
