@@ -1,3 +1,4 @@
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 import PostgrestError from './PostgrestError'
 import { ContainsNull } from './select-query-parser/types'
 import { SelectQueryError } from './select-query-parser/utils'

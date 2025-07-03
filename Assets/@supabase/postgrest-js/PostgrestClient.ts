@@ -3,7 +3,8 @@ import PostgrestFilterBuilder from './PostgrestFilterBuilder'
 import PostgrestBuilder from './PostgrestBuilder'
 import { DEFAULT_HEADERS } from './constants'
 import { Fetch, GenericSchema } from './types'
-
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 /**
  * PostgREST client.
  *

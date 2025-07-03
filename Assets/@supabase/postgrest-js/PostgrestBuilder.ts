@@ -1,5 +1,7 @@
 // @ts-ignore
-import nodeFetch from '@supabase/node-fetch'
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
 
 import type {
   Fetch,
@@ -40,8 +42,8 @@ export default abstract class PostgrestBuilder<Result, ThrowOnError extends bool
 
     if (builder.fetch) {
       this.fetch = builder.fetch
-    } else if (typeof fetch === 'undefined') {
-      this.fetch = nodeFetch
+    // } else if (typeof fetch === 'undefined') {
+    //   this.fetch = nodeFetch
     } else {
       this.fetch = fetch
     }

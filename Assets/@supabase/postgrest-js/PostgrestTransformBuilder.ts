@@ -1,6 +1,9 @@
 import PostgrestBuilder from './PostgrestBuilder'
 import { GetResult } from './select-query-parser/result'
 import { GenericSchema, CheckMatchingArrayTypes } from './types'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+
 
 export default class PostgrestTransformBuilder<
   Schema extends GenericSchema,

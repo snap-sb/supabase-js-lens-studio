@@ -2,6 +2,9 @@ import PostgrestBuilder from './PostgrestBuilder'
 import PostgrestFilterBuilder from './PostgrestFilterBuilder'
 import { GetResult } from './select-query-parser/result'
 import { Fetch, GenericSchema, GenericTable, GenericView } from './types'
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+
 
 export default class PostgrestQueryBuilder<
   Schema extends GenericSchema,
