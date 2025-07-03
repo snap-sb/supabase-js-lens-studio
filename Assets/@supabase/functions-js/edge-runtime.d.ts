@@ -1,3 +1,6 @@
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+
 declare namespace Supabase {
   export interface ModelOptions {
     /**
@@ -38,8 +41,8 @@ declare namespace Supabase {
      */
     run(
       prompt:
-        | string
-        | Omit<import('openai').OpenAI.Chat.ChatCompletionCreateParams, 'model' | 'stream'>,
+        | string,
+        // | Omit<import('openai').OpenAI.Chat.ChatCompletionCreateParams, 'model' | 'stream'>,
       modelOptions?: ModelOptions
     ): unknown
   }

@@ -1,3 +1,4 @@
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
 import { Fetch } from './types'
 
 export const resolveFetch = (customFetch?: Fetch): Fetch => {

@@ -1,3 +1,5 @@
+import { fetchPolyFill as fetch } from '@supabase/global-polyfill-custom/index'
+
 export type Fetch = typeof fetch
 
 /**
@@ -76,11 +78,5 @@ export type FunctionInvokeOptions = {
    * The body of the request.
    */
   body?:
-    | File
-    | Blob
-    | ArrayBuffer
-    | FormData
-    | ReadableStream<Uint8Array>
-    | Record<string, any>
-    | string
+    | string 
 }

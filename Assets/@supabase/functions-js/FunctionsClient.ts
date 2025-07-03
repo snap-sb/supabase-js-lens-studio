@@ -65,22 +65,23 @@ export class FunctionsClient {
         functionArgs &&
         ((headers && !Object.prototype.hasOwnProperty.call(headers, 'Content-Type')) || !headers)
       ) {
-        if (
-          (typeof Blob !== 'undefined' && functionArgs instanceof Blob) ||
-          functionArgs instanceof ArrayBuffer
-        ) {
-          // will work for File as File inherits Blob
-          // also works for ArrayBuffer as it is the same underlying structure as a Blob
-          _headers['Content-Type'] = 'application/octet-stream'
-          body = functionArgs
-        } else if (typeof functionArgs === 'string') {
+//        if (
+//          (typeof Blob !== 'undefined' && functionArgs instanceof Blob) ||
+//          functionArgs instanceof ArrayBuffer
+//        ) {
+//          // will work for File as File inherits Blob
+//          // also works for ArrayBuffer as it is the same underlying structure as a Blob
+//          _headers['Content-Type'] = 'application/octet-stream'
+//          body = functionArgs
+//        } else 
+        if (typeof functionArgs === 'string') {
           // plain string
           _headers['Content-Type'] = 'text/plain'
           body = functionArgs
-        } else if (typeof FormData !== 'undefined' && functionArgs instanceof FormData) {
-          // don't set content-type headers
-          // Request will automatically add the right boundary value
-          body = functionArgs
+//        } else if (typeof FormData !== 'undefined' && functionArgs instanceof FormData) {
+//          // don't set content-type headers
+//          // Request will automatically add the right boundary value
+//          body = functionArgs
         } else {
           // default, assume this is JSON
           _headers['Content-Type'] = 'application/json'
@@ -114,11 +115,11 @@ export class FunctionsClient {
       if (responseType === 'application/json') {
         data = await response.json()
       } else if (responseType === 'application/octet-stream') {
-        data = await response.blob()
+        data = await response.bytes()
       } else if (responseType === 'text/event-stream') {
         data = response
-      } else if (responseType === 'multipart/form-data') {
-        data = await response.formData()
+//      } else if (responseType === 'multipart/form-data') {
+//        data = await response.formData()
       } else {
         // default to text
         data = await response.text()
