@@ -120,48 +120,48 @@ function createIntegerConversion(bitLength, { unsigned }) {
   };
 }
 
-function createLongLongConversion(bitLength, { unsigned }) {
-  const upperBound = Number.MAX_SAFE_INTEGER;
-  const lowerBound = unsigned ? 0 : Number.MIN_SAFE_INTEGER;
-  const asBigIntN = unsigned ? BigInt.asUintN : BigInt.asIntN;
+// function createLongLongConversion(bitLength, { unsigned }) {
+//   const upperBound = Number.MAX_SAFE_INTEGER;
+//   const lowerBound = unsigned ? 0 : Number.MIN_SAFE_INTEGER;
+//   const asBigIntN = unsigned ? BigInt.asUintN : BigInt.asIntN;
 
-  return (value, options = {}) => {
-    let x = toNumber(value, options);
-    x = censorNegativeZero(x);
+//   return (value, options = {}) => {
+//     let x = toNumber(value, options);
+//     x = censorNegativeZero(x);
 
-    if (options.enforceRange) {
-      if (!Number.isFinite(x)) {
-        throw makeException(TypeError, "is not a finite number", options);
-      }
+//     if (options.enforceRange) {
+//       if (!Number.isFinite(x)) {
+//         throw makeException(TypeError, "is not a finite number", options);
+//       }
 
-      x = integerPart(x);
+//       x = integerPart(x);
 
-      if (x < lowerBound || x > upperBound) {
-        throw makeException(
-          TypeError,
-          `is outside the accepted range of ${lowerBound} to ${upperBound}, inclusive`,
-          options
-        );
-      }
+//       if (x < lowerBound || x > upperBound) {
+//         throw makeException(
+//           TypeError,
+//           `is outside the accepted range of ${lowerBound} to ${upperBound}, inclusive`,
+//           options
+//         );
+//       }
 
-      return x;
-    }
+//       return x;
+//     }
 
-    if (!Number.isNaN(x) && options.clamp) {
-      x = Math.min(Math.max(x, lowerBound), upperBound);
-      x = evenRound(x);
-      return x;
-    }
+//     if (!Number.isNaN(x) && options.clamp) {
+//       x = Math.min(Math.max(x, lowerBound), upperBound);
+//       x = evenRound(x);
+//       return x;
+//     }
 
-    if (!Number.isFinite(x) || x === 0) {
-      return 0;
-    }
+//     if (!Number.isFinite(x) || x === 0) {
+//       return 0;
+//     }
 
-    let xBigInt = BigInt(integerPart(x));
-    xBigInt = asBigIntN(bitLength, xBigInt);
-    return Number(xBigInt);
-  };
-}
+//     let xBigInt = BigInt(integerPart(x));
+//     xBigInt = asBigIntN(bitLength, xBigInt);
+//     return Number(xBigInt);
+//   };
+// }
 
 exports.any = value => {
   return value;
@@ -184,8 +184,8 @@ exports["unsigned short"] = createIntegerConversion(16, { unsigned: true });
 exports.long = createIntegerConversion(32, { unsigned: false });
 exports["unsigned long"] = createIntegerConversion(32, { unsigned: true });
 
-exports["long long"] = createLongLongConversion(64, { unsigned: false });
-exports["unsigned long long"] = createLongLongConversion(64, { unsigned: true });
+// exports["long long"] = createLongLongConversion(64, { unsigned: false });
+// exports["unsigned long long"] = createLongLongConversion(64, { unsigned: true });
 
 exports.double = (value, options = {}) => {
   const x = toNumber(value, options);
