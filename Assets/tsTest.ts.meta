@@ -1,0 +1,50 @@
+- !<AssetImportMetadata/442a3245-8def-4c5c-ad0c-e325c0badabf>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> d70c108d-b39d-4ce2-bd31-0f670b58f3a0
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> d70c108d-b39d-4ce2-bd31-0f670b58f3a0
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> f9682292-3a28-492c-a063-93c040beafb1
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/f9682292-3a28-492c-a063-93c040beafb1>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: cc7b66ab-6339-4842-94f3-b9dcd6a7c8f3
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    channelName: false
+    privateServiceToken: false
+    projectUrl: false
+    publicAnonToken: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - projectUrl: ""
+      publicAnonToken: ""
+      privateServiceToken: ""
+      channelName: ""
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input string projectUrl
+    - // @input string publicAnonToken
+    - // @input string privateServiceToken
+    - // @input string channelName
