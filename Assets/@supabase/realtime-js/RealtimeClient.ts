@@ -1,4 +1,10 @@
-import WebSocket from './WebSocket'
+import WebSocketPolyfill from './WebSocket'
+import { fetchPolyFill as fetch, setIntervalPolyFill as setInterval, clearIntervalPolyFill as clearInterval } from '@supabase/global-polyfill-custom/index'
+
+import { URL, URLSearchParams} from '@supabase/whatwg-url/index';
+import { AbortSignal, AbortController } from '@supabase/abortcontroller-polyfill/abortcontroller'
+
+
 
 import {
   CHANNEL_EVENTS,
@@ -54,7 +60,7 @@ export interface WebSocketLikeConstructor {
   ): WebSocketLike
 }
 
-export type WebSocketLike = WebSocket | WSWebSocketDummy
+export type WebSocketLike = WebSocketPolyfill | WSWebSocketDummy
 
 export interface WebSocketLikeError {
   error: any
@@ -127,7 +133,7 @@ export default class RealtimeClient {
   accessToken: (() => Promise<string | null>) | null = null
   worker?: boolean
   workerUrl?: string
-  workerRef?: Worker
+  workerRef?: null
 
   /**
    * Initializes the Socket.
@@ -192,13 +198,13 @@ export default class RealtimeClient {
     }, this.reconnectAfterMs)
 
     this.fetch = this._resolveFetch(options?.fetch)
-    if (options?.worker) {
-      if (typeof window !== 'undefined' && !window.Worker) {
-        throw new Error('Web Worker is not supported')
-      }
-      this.worker = options?.worker || false
-      this.workerUrl = options?.workerUrl
-    }
+    // if (options?.worker) {
+    //   if (typeof window !== 'undefined' && !window.Worker) {
+    //     throw new Error('Web Worker is not supported')
+    //   }
+    //   this.worker = options?.worker || false
+    //   this.workerUrl = options?.workerUrl
+    // }
     this.accessToken = options?.accessToken || null
   }
 
@@ -209,28 +215,24 @@ export default class RealtimeClient {
     if (this.conn) {
       return
     }
-    if (!this.transport) {
-      this.transport = WebSocket
-    }
-    if (this.transport) {
-      // Detect if using the native browser WebSocket
-      const isBrowser =
-        typeof window !== 'undefined' && this.transport === window.WebSocket
-      if (isBrowser) {
-        this.conn = new this.transport(this.endpointURL())
-      } else {
-        this.conn = new this.transport(this.endpointURL(), undefined, {
-          headers: this.headers,
-        })
-      }
-      this.setupConnection()
-      return
-    }
-    this.conn = new WSWebSocketDummy(this.endpointURL(), undefined, {
-      close: () => {
-        this.conn = null
-      },
-    })
+    // if (!this.transport) {
+    //   this.transport = WebSocketImpl
+    // }
+    // if (this.transport) {
+    //   // Detect if using the native browser WebSocket
+    //   const isBrowser = false
+    //   if (isBrowser) {
+    //     this.conn = new this.transport(this.endpointURL())
+    //   } else {
+    //     this.conn = new this.transport(this.endpointURL(), undefined, {
+    //       headers: this.headers,
+    //     })
+    //   }
+    //   this.setupConnection()
+    //   return
+    // }
+    this.conn = new WebSocketPolyfill(this.endpointURL());
+    this.setupConnection();
   }
 
   /**
@@ -568,28 +570,29 @@ export default class RealtimeClient {
         () => this.sendHeartbeat(),
         this.heartbeatIntervalMs
       )
-    } else {
-      if (this.workerUrl) {
-        this.log('worker', `starting worker for from ${this.workerUrl}`)
-      } else {
-        this.log('worker', `starting default worker`)
-      }
-      const objectUrl = this._workerObjectUrl(this.workerUrl!)
-      this.workerRef = new Worker(objectUrl)
-      this.workerRef.onerror = (error) => {
-        this.log('worker', 'worker error', (error as ErrorEvent).message)
-        this.workerRef!.terminate()
-      }
-      this.workerRef.onmessage = (event) => {
-        if (event.data.event === 'keepAlive') {
-          this.sendHeartbeat()
-        }
-      }
-      this.workerRef.postMessage({
-        event: 'start',
-        interval: this.heartbeatIntervalMs,
-      })
     }
+    // else {
+    //   if (this.workerUrl) {
+    //     this.log('worker', `starting worker for from ${this.workerUrl}`)
+    //   } else {
+    //     this.log('worker', `starting default worker`)
+    //   }
+    //   const objectUrl = this._workerObjectUrl(this.workerUrl!)
+    //   this.workerRef = new Worker(objectUrl)
+    //   this.workerRef.onerror = (error) => {
+    //     this.log('worker', 'worker error', (error as ErrorEvent).message)
+    //     this.workerRef!.terminate()
+    //   }
+    //   this.workerRef.onmessage = (event) => {
+    //     if (event.data.event === 'keepAlive') {
+    //       this.sendHeartbeat()
+    //     }
+    //   }
+    //   this.workerRef.postMessage({
+    //     event: 'start',
+    //     interval: this.heartbeatIntervalMs,
+    //   })
+    // }
     this.stateChangeCallbacks.open.forEach((callback) => callback())
   }
 
@@ -629,16 +632,16 @@ export default class RealtimeClient {
     return `${url}${prefix}${query}`
   }
 
-  private _workerObjectUrl(url: string | undefined): string {
-    let result_url: string
-    if (url) {
-      result_url = url
-    } else {
-      const blob = new Blob([WORKER_SCRIPT], { type: 'application/javascript' })
-      result_url = URL.createObjectURL(blob)
-    }
-    return result_url
-  }
+  // private _workerObjectUrl(url: string | undefined): string {
+  //   let result_url: string
+  //   if (url) {
+  //     result_url = url
+  //   } else {
+  //     const blob = new Blob([WORKER_SCRIPT], { type: 'application/javascript' })
+  //     result_url = URL.createObjectURL(blob)
+  //   }
+  //   return result_url
+  // }
 }
 
 class WSWebSocketDummy {

@@ -1,3 +1,4 @@
+import { console } from '@supabase/global-polyfill-custom/index'
 /**
  * Helpers to convert the change Payload into native JS types.
  */

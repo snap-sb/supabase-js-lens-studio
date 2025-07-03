@@ -1,3 +1,4 @@
+import { setTimeoutPolyFill as setTimeout, clearTimeoutPolyFill as clearTimeout } from '@supabase/global-polyfill-custom/index'
 /**
  * Creates a timer that accepts a `timerCalc` function to perform calculated timeout retries, such as exponential backoff.
  *

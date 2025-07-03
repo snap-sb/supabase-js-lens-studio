@@ -1,3 +1,5 @@
+import { setTimeoutPolyFill as setTimeout, clearTimeoutPolyFill as clearTimeout } from '@supabase/global-polyfill-custom/index'
+
 import { CHANNEL_EVENTS, CHANNEL_STATES } from './lib/constants'
 import Push from './lib/push'
 import type RealtimeClient from './RealtimeClient'
@@ -470,7 +472,7 @@ export default class RealtimeChannel {
           opts.timeout ?? this.timeout
         )
 
-        await response.body?.cancel()
+        // await response.text().cancel()
         return response.ok ? 'ok' : 'error'
       } catch (error: any) {
         if (error.name === 'AbortError') {
@@ -555,15 +557,15 @@ export default class RealtimeChannel {
     options: { [key: string]: any },
     timeout: number
   ) {
-    const controller = new AbortController()
-    const id = setTimeout(() => controller.abort(), timeout)
+    // const controller = new AbortController()
+    // const id = setTimeout(() => controller.abort(), timeout)
 
     const response = await this.socket.fetch(url, {
       ...options,
-      signal: controller.signal,
+      // signal: controller.signal,
     })
 
-    clearTimeout(id)
+    // clearTimeout(id)
 
     return response
   }

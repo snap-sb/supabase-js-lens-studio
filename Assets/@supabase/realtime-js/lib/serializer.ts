@@ -36,12 +36,15 @@ export default class Serializer {
     const topicSize = view.getUint8(1)
     const eventSize = view.getUint8(2)
     let offset = this.HEADER_LENGTH + 2
-    const topic = decoder.decode(buffer.slice(offset, offset + topicSize))
+    const arr = new Uint8Array(buffer.slice(offset, offset + topicSize));
+    const topic = decoder.decode(arr)
     offset = offset + topicSize
-    const event = decoder.decode(buffer.slice(offset, offset + eventSize))
+    const arr1 = new Uint8Array(buffer.slice(offset, offset + eventSize));
+    const event = decoder.decode(arr1)
     offset = offset + eventSize
+    const arr2 = new Uint8Array(buffer.slice(offset, buffer.byteLength));
     const data = JSON.parse(
-      decoder.decode(buffer.slice(offset, buffer.byteLength))
+      decoder.decode(arr2)
     )
 
     return { ref: null, topic: topic, event: event, payload: data }

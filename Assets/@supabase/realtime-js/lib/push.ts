@@ -1,3 +1,5 @@
+import { setTimeoutPolyFill as setTimeout, clearTimeoutPolyFill as clearTimeout } from '@supabase/global-polyfill-custom/index'
+
 import { DEFAULT_TIMEOUT } from '../lib/constants'
 import type RealtimeChannel from '../RealtimeChannel'
 
